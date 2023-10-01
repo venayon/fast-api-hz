@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+
+  hazelcast_service:
+    image: hazelcast/hazelcast:5.3
+    container_name: hazelcast_container
+    ports:
+      - "5701:5701"
+    networks:
+      hazelcast_network: {}
+
+
+  management_center:
+    image: hazelcast/management-center:5.3
+    container_name: hazelcast_mgmt_center
+    ports:
+      - "8090:8080" # Management Center's default port
+    environment: # Environment variables for the Management Center
+      - MC_INIT_CLUSTER_ENABLED=false
+      - MC_INIT_PORT=5701
+      - MC_INIT_MEMBER_COUNT=1
+    networks:
+       hazelcast_network: {}
+    depends_on:
+      - hazelcast_service
+
+  fast_api_hz:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: fast_api_hz:latest
+    container_name: fastapi_container
+    ports:
+      - "8081:8081"
+    networks:
+      hazelcast_network: {}
+    depends_on:
+      - hazelcast_service
+
+networks:
+  hazelcast_network:
